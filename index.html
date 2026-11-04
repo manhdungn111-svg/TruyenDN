@@ -41,7 +41,8 @@ nav .mep{flex-direction:row;gap:10px;background:#333337;border-radius:30px;paddi
 .av{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,#7b5cff,#4b2fd0);display:grid;place-items:center;font-weight:800;font-size:17px;color:#fff}
 .li{display:flex;gap:14px;margin:0 16px 12px;background:var(--s1);border-radius:14px;padding:10px;align-items:center;cursor:pointer}.li .cv{width:76px;flex:none}.li>div:nth-child(2){flex:1;min-width:0}
 .sb{font-size:14px;color:var(--mu);margin-top:3px}
-.dt{display:flex;gap:16px;padding:14px 16px}.dt .cv{width:120px;flex:none}.dt h1{margin:0 0 6px;font-size:22px}.hb2{margin-top:10px;background:#2c2c2f;border-radius:20px;padding:8px 16px;font-size:15px}.hb2.on{color:#ff4d6a}.x{color:var(--mu);padding:10px;font-size:20px}
+.dt{display:flex;gap:16px;padding:14px 16px}.dt .cv{width:120px;flex:none}.dt h1{margin:0 0 6px;font-size:22px}.hb2{margin-top:10px;background:#2c2c2f;border-radius:20px;padding:8px 16px;font-size:15px}.hb2.on{color:#ff4d6a}
+.bn{height:150px;overflow:hidden;position:relative}.bn img{width:100%;height:100%;object-fit:cover;display:block}.bn::after{content:"";position:absolute;inset:0;background:linear-gradient(#0000 35%,#000)}.dt.up{margin-top:-64px;position:relative;z-index:1}.x{color:var(--mu);padding:10px;font-size:20px}
 .em{text-align:center;color:var(--mu);padding:56px 24px}.em .b2{margin-top:16px}
 .b2{display:inline-block;background:var(--ac);color:#fff;font-weight:700;border-radius:24px;padding:11px 24px;font-size:16px}
 .me{min-height:100vh;background:linear-gradient(#3b2f7c 0,#1a1340 260px,#000 520px);padding:20px 16px 20px}
@@ -71,7 +72,7 @@ nav .mep{flex-direction:row;gap:10px;background:#333337;border-radius:30px;paddi
 <div id="rd"><div id="sc"></div>
 <div class="rb" id="t1"><button id="bk">‹</button><div class="rt" id="rt"></div><span id="pg" style="color:#ccc;font-size:14px"></span><button id="rf">♡</button></div>
 <div class="rb" id="t2"><button id="pc">⏮</button><button class="pp" id="pp">▶ Chạy</button><button id="nc">⏭</button><span>🐢</span><input type="range" id="sp" min="1" max="14" value="4"><span>🐇</span></div></div>
-<div id="mdl"></div><input type="file" id="imf" accept=".json" hidden>
+<div id="mdl"></div><input type="file" id="imf" accept=".json" hidden><input type="file" id="fp" accept="image/*" hidden><input type="file" id="fb" accept="image/*" hidden>
 <script>
 const $=s=>document.querySelector(s),G=['Hành động','Tình cảm','Hài hước','Phiêu lưu','Kinh dị','Fantasy','Đời thường','Khác'];
 let db=null,mem=new Map(),user='guest',books=[],view='home',gen='Trang chủ',sub='',qv='',urls={},hi=0,hero=[];
@@ -79,15 +80,17 @@ const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',
 const ls={get:(k,d)=>{try{return JSON.parse(localStorage.getItem(k))??d}catch(e){return d}},set:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
 const open=()=>new Promise(r=>{try{const q=indexedDB.open('mangotv',1);q.onupgradeneeded=()=>q.result.createObjectStore('books',{keyPath:'id'});q.onsuccess=()=>{db=q.result;r()};q.onerror=q.onblocked=()=>r()}catch(e){r()}});
 const put=b=>db?new Promise(r=>{const t=db.transaction('books','readwrite');t.objectStore('books').put(b);t.oncomplete=t.onerror=r}):mem.set(b.id,b);
+const del=id=>db?new Promise(r=>{const t=db.transaction('books','readwrite');t.objectStore('books').delete(id);t.oncomplete=t.onerror=r}):mem.delete(id);
 const all=()=>db?new Promise(r=>{const q=db.transaction('books').objectStore('books').getAll();q.onsuccess=()=>r(q.result);q.onerror=()=>r([])}):[...mem.values()];
 async function load(){books=(await all()).filter(b=>b.user===user);draw()}
 const chs=b=>b.ch||(b.ch=[{n:'1',pages:b.pages}]);
 const cover=b=>urls[b.id]||(urls[b.id]=URL.createObjectURL(b.cover||chs(b)[0].pages[0]));
+const bgu=b=>urls[b.id+'bg']||(urls[b.id+'bg']=URL.createObjectURL(b.bg||b.cover||chs(b)[0].pages[0]));
 const prog=b=>Math.min(1,((b.cur||0)+(b.pos||0))/chs(b).length);
 const npg=b=>chs(b).reduce((s,c)=>s+c.pages.length,0);
 let dId='';const detail=()=>books.find(b=>b.id==dId);
 function bookH(){const b=detail();if(!b)return em('Không tìm thấy truyện.');const cs=chs(b),k=b.cur||0;
- return `<div class="dt"><div class="cv"><img src="${cover(b)}"></div><div><h1>${esc(b.title)}</h1><div class="sb">${esc(b.genres.join(' · '))}</div><div class="sb">${cs.length} chap · ${npg(b)} trang</div><button class="hb2 ${b.fav?'on':''}" data-f="${b.id}">${b.fav?'♥ Đã thích':'♡ Yêu thích'}</button></div></div><div class="fl" style="padding:0 16px"><button class="bt" data-rd="${b.id}:${b.last?k:0}">▶ ${b.last?'Đọc tiếp chap '+cs[k].n:'Đọc từ chap '+cs[0].n}</button><button class="bt g" data-a="addch">＋ Thêm chap</button></div><h2>Danh sách chap (${cs.length})</h2>`+cs.map((c,i)=>`<div class="li" data-rd="${b.id}:${i}"><div style="flex:1"><div class="tt" style="margin:0">Chap ${esc(c.n)}</div><div class="sb">${c.pages.length} trang${k==i&&b.last?' · đang đọc':''}</div></div><button class="x" data-dc="${b.id}:${i}">✕</button></div>`).join('')}
+ return (b.bg?`<div class="bn"><img src="${bgu(b)}"></div>`:'')+`<div class="dt${b.bg?' up':''}"><div class="cv"><img src="${cover(b)}"></div><div><h1>${esc(b.title)}</h1><div class="sb">${esc(b.genres.join(' · '))}</div><div class="sb">${cs.length} chap · ${npg(b)} trang</div><button class="hb2 ${b.fav?'on':''}" data-f="${b.id}">${b.fav?'♥ Đã thích':'♡ Yêu thích'}</button></div></div><div class="fl" style="padding:0 16px"><button class="bt" data-rd="${b.id}:${b.last?k:0}">▶ ${b.last?'Đọc tiếp chap '+cs[k].n:'Đọc từ chap '+cs[0].n}</button><button class="bt g" data-a="addch">＋ Thêm chap</button></div><div class="fl" style="padding:10px 16px 0"><button class="bt g" data-a="ps1" style="font-size:14px;padding:11px 4px">🖼 Đổi poster</button><button class="bt g" data-a="ps2" style="font-size:14px;padding:11px 4px">🌄 Đổi ảnh nền</button><button class="bt g" data-a="delbk" style="font-size:14px;padding:11px 4px;color:#ff4d6a">🗑 Xóa truyện</button></div><h2>Danh sách chap (${cs.length})</h2>`+cs.map((c,i)=>`<div class="li" data-rd="${b.id}:${i}"><div style="flex:1"><div class="tt" style="margin:0">Chap ${esc(c.n)}</div><div class="sb">${c.pages.length} trang${k==i&&b.last?' · đang đọc':''}</div></div><button class="x" data-dc="${b.id}:${i}">✕</button></div>`).join('')}
 const sha=async s=>[...new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode('mtv:'+s)))].map(x=>x.toString(16).padStart(2,'0')).join('');
 user=ls.get('mtv_user','guest');
 const by=k=>[...books].sort((a,b)=>(b[k]||0)-(a[k]||0));
@@ -104,7 +107,7 @@ function hdr(){const H=$('#hd');
 const card=(b,l)=>`<div class="cd" data-o="${b.id}"><div class="cv ${l?'l':''}"><img src="${cover(b)}" alt="">${l?`<span class="bg">${esc(b.genres[0]||'Truyện')}</span>`:''}<button class="hb ${b.fav?'on':''}" data-f="${b.id}">${b.fav?'♥':'♡'}</button>${b.last?`<div class="bar"><i style="width:${Math.round(prog(b)*100)}%"></i></div>`:''}</div><div class="tt">${esc(b.title)}</div><div class="sb">${chs(b).length} chap</div></div>`;
 const g3=a=>`<div class="g3">${a.map(b=>card(b)).join('')}</div>`,sec=(t,h)=>h?`<h2>${t}</h2>${h}`:'';
 const em=(t,b)=>`<div class="em">${t}${b?`<div class="b2" data-a="add">＋ Thêm truyện</div>`:''}</div>`;
-const heroH=()=>{if(!hero.length)return'';const b=hero[hi%hero.length];return `<div class="hero" data-o="${b.id}"><img src="${cover(b)}"><div class="ht"><h1>${esc(b.title)}</h1><p>${b.last?'Đọc tiếp · Chap '+chs(b)[b.cur||0].n:chs(b).length+' chap'} · ${esc(b.genres[0]||'Truyện')}</p></div><div class="dots">${hero.map((_,i)=>`<i class="${i==hi%hero.length?'on':''}"></i>`).join('')}</div></div>`};
+const heroH=()=>{if(!hero.length)return'';const b=hero[hi%hero.length];return `<div class="hero" data-o="${b.id}"><img src="${bgu(b)}"><div class="ht"><h1>${esc(b.title)}</h1><p>${b.last?'Đọc tiếp · Chap '+chs(b)[b.cur||0].n:chs(b).length+' chap'} · ${esc(b.genres[0]||'Truyện')}</p></div><div class="dots">${hero.map((_,i)=>`<i class="${i==hi%hero.length?'on':''}"></i>`).join('')}</div></div>`};
 function main(){const M=$('#m');let h='';
   if(sub=='book')h=bookH();else if(sub){const a=sub=='fav'?books.filter(b=>b.fav):by('added');h=a.length?`<div style="height:6px"></div>`+g3(a):em(sub=='fav'?'Chưa có truyện yêu thích.<br>Bấm ♡ trên bìa truyện.':'Thư viện trống.',sub!='fav')}
   else if(view=='home'){
@@ -137,8 +140,8 @@ setInterval(()=>{const e=document.querySelector('.hero');if(!e||hero.length<2||v
 const modal=h=>$('#mdl').innerHTML=h?`<div class="md" id="mb"><div class="sh">${h}</div></div>`:'';
 function authUI(){modal(`<h3>Đăng nhập / Đăng ký</h3><input class="f" id="un" placeholder="Tên đăng nhập" autocapitalize="none"><input class="f" id="pw" type="password" placeholder="Mật khẩu (≥4 ký tự)"><div class="fl"><button class="bt" data-a="li">Đăng nhập</button><button class="bt g" data-a="rg">Đăng ký</button></div><p class="mu" id="ms"></p>`)}
 let sel=new Set(['Khác']);
-let addTo='';function addUI(bid){addTo=bid||'';const bb=bid?books.find(b=>b.id==bid):null;const nx=bb?Math.max(0,...chs(bb).map(c=>parseFloat(c.n)||0))+1:1;modal(`<h3>${bb?'Thêm chap · '+esc(bb.title):'Thêm truyện'}</h3>${bb?'':'<input class="f" id="ti" placeholder="Tên truyện (bỏ trống = lấy theo tệp)">'}<input class="f" id="cn" inputmode="decimal" value="${nx}" placeholder="Số chap"><p class="mu" style="margin:-4px 0 10px">Số chap bắt đầu. Chọn nhiều tệp ZIP/CBZ thì mỗi tệp là 1 chap, đánh số tăng dần.</p><div class="chips" style="display:${bb?'none':'flex'}">${G.map(g=>`<button class="chip ${sel.has(g)?'on':''}" data-s2="${g}">${g}</button>`).join('')}</div>
-  <button class="bt" data-a="p1">🖼️ Chọn ảnh / ZIP-CBZ (thiết bị hoặc Drive)</button><button class="bt g" data-a="p2">📁 Chọn cả thư mục ảnh</button>
+let addTo='',posterF=null,bgF=null;function addUI(bid){addTo=bid||'';posterF=bgF=null;const bb=bid?books.find(b=>b.id==bid):null;const nx=bb?Math.max(0,...chs(bb).map(c=>parseFloat(c.n)||0))+1:1;modal(`<h3>${bb?'Thêm chap · '+esc(bb.title):'Thêm truyện'}</h3>${bb?'':'<input class="f" id="ti" placeholder="Tên truyện (bỏ trống = lấy theo tệp)">'}<input class="f" id="cn" inputmode="decimal" value="${nx}" placeholder="Số chap"><p class="mu" style="margin:-4px 0 10px">Số chap bắt đầu. Chọn nhiều tệp ZIP/CBZ thì mỗi tệp là 1 chap, đánh số tăng dần.</p><div class="chips" style="display:${bb?'none':'flex'}">${G.map(g=>`<button class="chip ${sel.has(g)?'on':''}" data-s2="${g}">${g}</button>`).join('')}</div>
+  ${bb?'':'<div class="fl"><button class="bt g" data-a="ps1" id="b1">🖼 Poster</button><button class="bt g" data-a="ps2" id="b2">🌄 Ảnh nền</button></div><p class="mu" style="margin:6px 0 10px">Poster (bìa dọc) và ảnh nền (banner ngang) lấy từ thiết bị, không bắt buộc. Chọn trước rồi mới chọn tệp truyện.</p>'}<button class="bt" data-a="p1">🖼️ Chọn ảnh / ZIP-CBZ (thiết bị hoặc Drive)</button><button class="bt g" data-a="p2">📁 Chọn cả thư mục ảnh</button>
   <input type="file" id="f1" multiple accept="image/*,.zip,.cbz,application/zip" hidden><input type="file" id="f2" webkitdirectory hidden>
   <p class="mu">Trên điện thoại, chọn nguồn “Drive” khi mở hộp chọn tệp để lấy truyện từ Google Drive. Ảnh tự xếp theo tên (1, 2, 3…).</p><p id="ps" class="mu"></p>`)}
 const nat=(a,b)=>a.name.localeCompare(b.name,undefined,{numeric:true});
@@ -159,7 +162,7 @@ async function ingest2(files){const ps=$('#ps');files=[...files].sort(nat);const
  if(!cs.length){ps.textContent='Không tìm thấy ảnh hợp lệ.';return}
  cs.forEach((c,i)=>c.n=String(n0+i));
  if(addTo){const b=books.find(b=>b.id==addTo),k=chs(b)[b.cur||0].n;b.ch.push(...cs);b.ch.sort((a,c)=>parseFloat(a.n)-parseFloat(c.n));b.cur=Math.max(0,b.ch.findIndex(c=>c.n==k));await put(b)}
- else await put({id:Date.now()+''+Math.random().toString(36).slice(2,6),user,title:($('#ti')||{value:''}).value.trim()||t||'Truyện mới',genres:[...sel],fav:false,added:Date.now(),last:0,cur:0,page:1,pos:0,ch:cs,cover:cs[0].pages[0]});
+ else await put({id:Date.now()+''+Math.random().toString(36).slice(2,6),user,title:($('#ti')||{value:''}).value.trim()||t||'Truyện mới',genres:[...sel],fav:false,added:Date.now(),last:0,cur:0,page:1,pos:0,ch:cs,cover:posterF||cs[0].pages[0],bg:bgF||null});
  modal('');load()}
 /* reader */
 let cur=null,auto=false,raf=0,fy=0;
@@ -194,7 +197,9 @@ document.addEventListener('click',async e=>{const t=e.target,c=s=>t.closest(s);l
   if(x=c('[data-s2]')){const g=x.dataset.s2;sel.has(g)?sel.delete(g):sel.add(g);if(!sel.size)sel.add('Khác');x.classList.toggle('on',sel.has(g));return}
   if(c('#mb')&&!c('.sh'))return modal('');
   const a=(c('[data-a]')||{dataset:{}}).dataset.a;if(!a)return;
-  if(a=='add')addUI();if(a=='addch')addUI(dId);if(a=='login')authUI();if(a=='back'){sub='';draw()}
+  if(a=='add')addUI();if(a=='addch')addUI(dId);
+  if(a=='ps1')$('#fp').click();if(a=='ps2')$('#fb').click();
+  if(a=='delbk'){const el=c('[data-a]');if(!el.dataset.arm){el.dataset.arm=1;el.textContent='Chạm lại để xóa';return}const b=detail();if(b){await del(b.id);delete urls[b.id];delete urls[b.id+'bg']}sub='';load()}if(a=='login')authUI();if(a=='back'){sub='';draw()}
   if(a=='p1')$('#f1').click();if(a=='p2')$('#f2').click();
   if(a=='clr'){for(const b of books){b.last=0;b.pos=0;await put(b)}draw()}
   if(a=='li'||a=='rg'){const n=$('#un').value.trim().toLowerCase(),p=$('#pw').value,ms=$('#ms'),ac=ls.get('mtv_acc',{});
@@ -206,17 +211,20 @@ document.addEventListener('click',async e=>{const t=e.target,c=s=>t.closest(s);l
   if(a=='lo'){user='guest';ls.set('mtv_user','guest');load()}
   if(a=='ex')backup();if(a=='im')$('#imf').click()});
 document.addEventListener('change',async e=>{const t=e.target;
+  if(t.id=='fp'||t.id=='fb'){const f=t.files[0],k=t.id=='fp'?'cover':'bg';t.value='';if(!f)return;
+    if($('#mb')){if(k=='cover'){posterF=f;$('#b1').textContent='✓ '+f.name.slice(0,14)}else{bgF=f;$('#b2').textContent='✓ '+f.name.slice(0,14)}}
+    else{const b=detail();if(b&&sub=='book'){b[k]=f;delete urls[b.id];delete urls[b.id+'bg'];await put(b);draw()}}return}
   if(t.id=='f1'||t.id=='f2')ingest2(t.files);
   if(t.id=='imf'&&t.files[0]){try{await restore(JSON.parse(await t.files[0].text()))}catch(er){alert('Tệp sao lưu không hợp lệ')}t.value=''}});
 const b2d=b=>new Promise(r=>{const f=new FileReader();f.onload=()=>r(f.result);f.readAsDataURL(b)});
 async function backup(){const dl=window.claude&&await claude.use('downloads').catch(()=>null);
-  const out=[];for(const b of books)out.push({...b,pages:undefined,cover:await b2d(b.cover||chs(b)[0].pages[0]),ch:await Promise.all(chs(b).map(async c=>({n:c.n,pages:await Promise.all(c.pages.map(b2d))})))});
+  const out=[];for(const b of books)out.push({...b,pages:undefined,cover:await b2d(b.cover||chs(b)[0].pages[0]),bg:b.bg?await b2d(b.bg):null,ch:await Promise.all(chs(b).map(async c=>({n:c.n,pages:await Promise.all(c.pages.map(b2d))})))});
   const name=`mangotruyen-${user}.json`,blob=new Blob([JSON.stringify({v:1,user,books:out})],{type:'application/json'});
   if(dl){try{await dl.save({filename:name,data:blob})}catch(e){}return}
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();a.remove()}
 async function restore(d){if(!d||!d.books)throw 0;
   const d2b=u=>{const [h,s]=u.split(','),a=atob(s),n=new Uint8Array(a.length);for(let i=0;i<a.length;i++)n[i]=a.charCodeAt(i);return new Blob([n],{type:h.slice(5,h.indexOf(';'))})};
-  for(const o of d.books){const ch=(o.ch||[{n:'1',pages:o.pages}]).map(c=>({n:c.n,pages:c.pages.map(d2b)}));await put({...o,user,ch,pages:undefined,cover:o.cover?d2b(o.cover):ch[0].pages[0]})}
+  for(const o of d.books){const ch=(o.ch||[{n:'1',pages:o.pages}]).map(c=>({n:c.n,pages:c.pages.map(d2b)}));await put({...o,user,ch,pages:undefined,cover:o.cover?d2b(o.cover):ch[0].pages[0],bg:o.bg?d2b(o.bg):null})}
   await load();alert('Đã khôi phục '+d.books.length+' truyện.')}
 open().then(load);
 </script></body></html>
